@@ -14,7 +14,7 @@
     </parent>
 
     <groupId>com.grupo</groupId>
-    <artifactId>produtos-api</artifactId>
+    <artifactId>api-gerenciamento-produtos</artifactId>
     <version>1.0.0</version>
     <name>produtos-api</name>
     <description>API RESTful - Gerenciamento de Produtos | POO</description>
