@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tech&Home Co. | Painel de Controle</title>
+    <link rel="icon" type="image/png" href="https://img.icons8.com/emoji/48/lightning-bolt-emoji.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased font-sans">
+
+    <nav class="bg-slate-900 text-white shadow-md sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center gap-3">
+                    <span class="text-2xl">⚡</span>
+                    <div>
+                        <span class="font-extrabold text-xl tracking-tight bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">Tech&Home Co.</span>
+                        <span class="hidden sm:inline-block text-xs text-slate-400 ml-2 border-l border-slate-700 pl-2">Gerenciador de Catálogo</span>
+                    </div>
+                </div>
+                <button onclick="abrirModalAdicionar()" class="bg-blue-600 hover:bg-blue-500 text-white font-medium text-sm px-4 py-2 rounded-lg transition-all shadow-sm active:scale-95">
+                    + Adicionar Produto
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 mb-8 flex flex-col md:flex-row gap-4 items-center justify-between">
+            <div class="relative w-full md:max-w-md">
+                <input 
+                    type="text" 
+                    id="inputBusca"
+                    placeholder="Pesquisar produto por nome ou ID..." 
+                    oninput="debounceBusca(this.value)"
+                    class="w-full pl-4 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition" 
+                />
+            </div>
+            
+            <div class="flex gap-2 overflow-x-auto w-full md:w-auto pb-2 md:pb-0" id="botoesCategoria">
+                <button onclick="filtrarCategoria('', this)" class="btn-cat px-4 py-1.5 rounded-full text-xs font-semibold border transition-all whitespace-nowrap bg-slate-900 text-white border-slate-900 shadow-sm">Todas</button>
+                <button onclick="filtrarCategoria('Eletrônico', this)" class="btn-cat px-4 py-1.5 rounded-full text-xs font-semibold border transition-all whitespace-nowrap bg-white text-slate-600 border-slate-200 hover:bg-slate-50">Eletrônicos</button>
+                <button onclick="filtrarCategoria('Móvel', this)" class="btn-cat px-4 py-1.5 rounded-full text-xs font-semibold border transition-all whitespace-nowrap bg-white text-slate-600 border-slate-200 hover:bg-slate-50">Móveis</button>
+                <button onclick="filtrarCategoria('Utilidade', this)" class="btn-cat px-4 py-1.5 rounded-full text-xs font-semibold border transition-all whitespace-nowrap bg-white text-slate-600 border-slate-200 hover:bg-slate-50">Utilidades</button>
+            </div>
+        </div>
+
+        <div id="gridProdutos" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            </div>
+    </main>
+
+    <div id="modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden border border-slate-100">
+            <div class="bg-slate-900 px-6 py-4 flex justify-between items-center text-white">
+                <h2 id="modalTitulo" class="text-base font-bold">Novo Produto</h2>
+                <button onclick="fecharModal()" class="text-slate-400 hover:text-white text-xl font-bold transition">&times;</button>
+            </div>
+            
+            <form id="formProduto" onsubmit="handleSubmit(event)" class="p-6 space-y-4">
+                <input type="hidden" id="editandoId" />
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Nome do Item *</label>
+                    <input type="text" id="formNome" required placeholder="Ex: Monitor Gamer 24" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-blue-500" />
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Categoria</label>
+                    <input type="text" id="formCategoria" placeholder="Ex: Eletrônico, Móvel" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-blue-500" />
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Preço (R$) *</label>
+                        <input type="number" id="formPreco" step="0.01" min="0.01" required placeholder="0.00" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-blue-500" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Qtd. Estoque *</label>
+                        <input type="number" id="formQuantidade" min="0" required placeholder="0" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-blue-500" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">URL da Imagem do Produto</label>
+                        <input type="text" id="formImagem" placeholder="Ex: https://site.com/imagem.jpg (Opcional)" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-blue-500" />
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Descrição Comercial</label>
+                    <textarea id="formDescricao" placeholder="Escreva os detalhes técnicos..." class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm resize-none focus:outline-none focus:border-blue-500" rows="3"></textarea>
+                </div>
+                
+                <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
+                    <button type="button" onclick="fecharModal()" class="px-4 py-2 text-xs font-semibold text-slate-500 hover:bg-slate-100 rounded-lg transition">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-md transition">Salvar Alterações</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8080/api/produtos';
+        
+        // Dados locais de simulação (caso o IntelliJ esteja desligado)
+        let listaProdutos = [
+            { id: 1, nome: "Notebook Dell Inspiron 15", descricao: "Notebook Intel Core i5, 8GB RAM, SSD 256GB, tela 15.6\"", preco: 3499.99, quantidade: 10, categoria: "Eletrônico" },
+            { id: 2, nome: "Mouse Logitech MX Master 3", descricao: "Mouse sem fio ergonômico, sensor 4000 DPI, botões programáveis", preco: 449.90, quantidade: 35, categoria: "Eletrônico" },
+            { id: 3, nome: "Cadeira Gamer ThunderX3", descricao: "Cadeira com suporte lombar, encosto reclinável 180°, base metálica", preco: 1299.00, quantidade: 3, categoria: "Móvel" },
+            { id: 4, nome: "Fone JBL Tune 510BT", descricao: "Fone Bluetooth on-ear, bateria 40h, dobráveis", preco: 249.99, quantidade: 50, categoria: "Eletrônico" },
+            { id: 5, nome: "Caneca Térmica Stanley", descricao: "Caneca de 473ml, mantém temperatura por 12h, aço inox", preco: 189.00, quantidade: 0, categoria: "Utilidade" }
+        ];
+
+        let categoriaSelecionada = '';
+        let termoBusca = '';
+        let timerDebounce;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            carregarProdutosDaAPI();
+        });
+
+        async function carregarProdutosDaAPI() {
+            try {
+                const res = await fetch(API_URL);
+                if (res.ok) {
+                    listaProdutos = await res.json();
+                }
+            } catch (e) {
+                console.log("Aviso: Rodando em modo de simulação local.");
+            }
+            aplicarFiltrosETela();
+        }
+
+        function obterUrlImagem(nomeProduto) {
+            const nome = nomeProduto.toLowerCase();
+            if (nome.includes('notebook') || nome.includes('dell') || nome.includes('computador')) return 'https://m.media-amazon.com/images/I/61QF9GA62XL._AC_UF894,1000_QL80_.jpg';
+            if (nome.includes('mouse')) return 'https://http2.mlstatic.com/D_795010-MLB110319132232_052026-O.jpg';
+            if (nome.includes('cadeira') || nome.includes('gamer')) return 'https://static.mundomax.com.br/produtos/67998/550/1.jpg';
+            if (nome.includes('fone') || nome.includes('jbl') || nome.includes('headset')) return 'https://m.media-amazon.com/images/I/61kFL7ywsZS.jpg';
+            if (nome.includes('caneca') || nome.includes('copo') || nome.includes('stanley')) return 'https://www.stanley1913.com.br/cdn/shop/files/285325-14.jpg?v=1719250876';
+            return 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&auto=format&fit=crop&q=60';
+        }
+
+        // FUNÇÃO DE BUSCA: LIGA DIRETO COM O SEU CONTROLLER JAVA
+       function debounceBusca(valor) {
+            termoBusca = valor.trim();
+            clearTimeout(timerDebounce);
+            
+            timerDebounce = setTimeout(async () => {
+                if (termoBusca !== '') {
+                    // SE FOR UM NÚMERO, FAZ A BUSCA COMBINADA (ID + NOME)
+                    if (/^\d+$/.test(termoBusca)) {
+                        try {
+                            // Cria as duas requisições paralelas para o seu Java no IntelliJ
+                            const [resId, resNome] = await Promise.all([
+                                fetch(`${API_URL}/${termoBusca}`),
+                                fetch(`${API_URL}/busca?nome=${encodeURIComponent(termoBusca)}`)
+                            ]);
+
+                            let produtosEncontrados = [];
+
+                            // 1. Tenta pegar o produto pelo ID (retorna objeto único)
+                            if (resId.ok) {
+                                const prodId = await resId.json();
+                                produtosEncontrados.push(prodId);
+                            }
+
+                            // 2. Tenta pegar os produtos pelo Nome (retorna uma lista)
+                            if (resNome.ok) {
+                                const prodsNome = await resNome.json();
+                                produtosEncontrados = [...produtosEncontrados, ...prodsNome];
+                            }
+
+                            // 3. Remove duplicados (caso o ID 3 também tenha "3" no nome)
+                            const listaUnica = produtosEncontrados.filter((prod, index, self) =>
+                                index === self.findIndex((p) => p.id === prod.id)
+                            );
+
+                            renderizarCards(listaUnica);
+                            return;
+
+                        } catch (e) {
+                            // Se o Java estiver offline, o filtro local abaixo resolve
+                            aplicarFiltrosETela();
+                            return;
+                        }
+                    } else {
+                        // SE FOR TEXTO (LETRAS): Busca normal apenas por nome no Java
+                        try {
+                            const res = await fetch(`${API_URL}/busca?nome=${encodeURIComponent(termoBusca)}`);
+                            if (res.ok) {
+                                const dadosBusca = await res.json();
+                                renderizarCards(dadosBusca);
+                                return;
+                            }
+                        } catch (e) {}
+                    }
+                }
+                aplicarFiltrosETela();
+            }, 250);
+        }
+
+        // FILTRO LOCAL (Garante o funcionamento mesmo se o Java estiver reiniciando)
+      function aplicarFiltrosETela() {
+            let resultado = [...listaProdutos];
+
+            if (termoBusca) {
+                if (/^\d+$/.test(termoBusca)) {
+                    // Traz se o ID for igual OU se o nome do produto contiver o número
+                    resultado = resultado.filter(p => 
+                        p.id == termoBusca || 
+                        p.nome.toLowerCase().includes(termoBusca.toLowerCase())
+                    );
+                } else {
+                    resultado = resultado.filter(p => p.nome.toLowerCase().includes(termoBusca.toLowerCase()));
+                }
+            }
+
+            if (categoriaSelecionada) {
+                resultado = resultado.filter(p => p.categoria && p.categoria.toLowerCase() === categoriaSelecionada.toLowerCase());
+            }
+
+            renderizarCards(resultado);
+        }
+
+        function renderizarCards(produtos) {
+            const grid = document.getElementById('gridProdutos');
+            if (!grid) return;
+
+            if (produtos.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full text-center py-16 bg-white rounded-xl border border-slate-100 shadow-sm">
+                        <p class="text-slate-400 font-medium text-sm">Nenhum produto disponível.</p>
+                    </div>`;
+                return;
+            }
+
+            grid.innerHTML = produtos.map(p => {
+                let badgeEstoque = `<span class="bg-emerald-50 text-emerald-700 border-emerald-200 border px-2 py-0.5 rounded-md text-[10px] font-bold">Em Estoque</span>`;
+                if (p.quantidade === 0) {
+                    badgeEstoque = `<span class="bg-rose-50 text-rose-700 border-rose-200 border px-2 py-0.5 rounded-md text-[10px] font-bold">Esgotado</span>`;
+                } else if (p.quantidade <= 10) {
+                    badgeEstoque = `<span class="bg-amber-50 text-amber-700 border-amber-200 border px-2 py-0.5 rounded-md text-[10px] font-bold">Poucas Unidades</span>`;
+                }
+
+                return `
+                    <div class="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden flex flex-col justify-between group hover:shadow-md transition-all duration-200">
+                        <div>
+                            <div class="h-44 bg-slate-100 relative overflow-hidden">
+                                <img src="${obterUrlImagem(p.nome)}" alt="${p.nome}" class="w-full h-full object-contain p-4 transition-transform duration-300 ease-out group-hover:scale-110">
+                                <div class="absolute top-3 left-3">
+                                    <span class="bg-slate-900/80 backdrop-blur-md text-white text-[10px] font-extrabold uppercase px-2.5 py-1 rounded shadow-sm tracking-wider">${p.categoria || 'Geral'}</span>
+                                </div>
+                            </div>
+                            <div class="p-5">
+                                <div class="flex items-center justify-between gap-2 mb-2">
+                                    ${badgeEstoque}
+                                    <span class="text-[10px] text-slate-400 font-mono">ID: ${p.id}</span>
+                                </div>
+                                <h3 class="font-bold text-slate-900 text-base tracking-tight line-clamp-1 group-hover:text-blue-600 transition-colors">${p.nome}</h3>
+                                <p class="text-xs text-slate-500 mt-1.5 line-clamp-2 min-h-[32px]">${p.descricao || 'Sem descrição cadastrada.'}</p>
+                            </div>
+                        </div>
+                        <div class="px-5 pb-5 pt-3 border-t border-slate-50 flex items-center justify-between bg-slate-50/50">
+                            <div>
+                                <span class="text-[10px] text-slate-400 block font-medium uppercase tracking-wider">Preço à vista</span>
+                                <span class="text-lg font-black text-slate-900">R$ ${Number(p.preco).toFixed(2)}</span>
+                            </div>
+                            <div class="flex gap-2">
+                                <button onclick="abrirModalEditar(${p.id})" class="text-xs font-semibold text-blue-600 hover:bg-blue-50 px-2 py-1 rounded transition">Editar</button>
+                                <button onclick="handleDeletar(${p.id})" class="text-xs font-semibold text-red-600 hover:bg-red-50 px-2 py-1 rounded transition">Excluir</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function filtrarCategoria(cat, botao) {
+            categoriaSelecionada = cat;
+            document.querySelectorAll('.btn-cat').forEach(btn => {
+                btn.className = "btn-cat px-4 py-1.5 rounded-full text-xs font-semibold border transition-all whitespace-nowrap bg-white text-slate-600 border-slate-200 hover:bg-slate-50";
+            });
+            botao.className = "btn-cat px-4 py-1.5 rounded-full text-xs font-semibold border transition-all whitespace-nowrap bg-slate-900 text-white border-slate-900 shadow-sm";
+            
+            if (cat !== '') {
+                try {
+                    const res = await fetch(`${API_URL}/categoria/${encodeURIComponent(cat)}`);
+                    if (res.ok) {
+                        const dadosCat = await res.json();
+                        renderizarCards(dadosCat);
+                        return;
+                    }
+                } catch (e) {}
+            }
+            aplicarFiltrosETela();
+        }
+
+        async function handleSubmit(e) {
+            e.preventDefault();
+            const id = document.getElementById('editandoId').value;
+            const payload = {
+                nome: document.getElementById('formNome').value,
+                categoria: document.getElementById('formCategoria').value,
+                preco: parseFloat(document.getElementById('formPreco').value),
+                quantidade: parseInt(document.getElementById('formQuantidade').value),
+                descricao: document.getElementById('formDescricao').value
+            };
+
+            try {
+                const url = id ? `${API_URL}/${id}` : API_URL;
+                const method = id ? 'PUT' : 'POST';
+                const res = await fetch(url, {
+                    method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (res.ok) {
+                    await carregarProdutosDaAPI();
+                } else {
+                    throw new Error();
+                }
+            } catch (error) {
+                if (id) {
+                    listaProdutos = listaProdutos.map(p => p.id == id ? { ...payload, id: parseInt(id) } : p);
+                } else {
+                    payload.id = Date.now();
+                    listaProdutos.push(payload);
+                }
+                aplicarFiltrosETela();
+            }
+            fecharModal();
+        }
+
+        async function handleDeletar(id) {
+            if (!confirm("Remover permanentemente este produto do catálogo?")) return;
+            try {
+                const res = await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+                if (res.ok) {
+                    await carregarProdutosDaAPI();
+                } else {
+                    throw new Error();
+                }
+            } catch (e) {
+                listaProdutos = listaProdutos.filter(p => p.id !== id);
+                aplicarFiltrosETela();
+            }
+        }
+
+        function abrirModalAdicionar() {
+            document.getElementById('formProduto').reset();
+            document.getElementById('editandoId').value = '';
+            document.getElementById('modalTitulo').innerText = 'Adicionar Item ao Catálogo';
+            document.getElementById('modal').style.display = 'flex';
+        }
+
+        function abrirModalEditar(id) {
+            const p = listaProdutos.find(prod => prod.id == id);
+            if (!p) return;
+            document.getElementById('editandoId').value = p.id;
+            document.getElementById('formNome').value = p.nome;
+            document.getElementById('formCategoria').value = p.categoria || '';
+            document.getElementById('formPreco').value = p.preco;
+            document.getElementById('formQuantidade').value = p.quantidade;
+            document.getElementById('formDescricao').value = p.descricao || '';
+            document.getElementById('modalTitulo').innerText = 'Atualizar Cadastro do Item';
+            document.getElementById('modal').style.display = 'flex';
+        }
+
+        function fecharModal() {
+            document.getElementById('modal').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
