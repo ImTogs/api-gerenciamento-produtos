@@ -98,7 +98,7 @@
     <script>
         const API_URL = 'http://localhost:8080/api/produtos';
         
-        // Dados locais de simulação (caso o IntelliJ esteja desligado)
+        
         let listaProdutos = [
             { id: 1, nome: "Notebook Dell Inspiron 15", descricao: "Notebook Intel Core i5, 8GB RAM, SSD 256GB, tela 15.6\"", preco: 3499.99, quantidade: 10, categoria: "Eletrônico" },
             { id: 2, nome: "Mouse Logitech MX Master 3", descricao: "Mouse sem fio ergonômico, sensor 4000 DPI, botões programáveis", preco: 449.90, quantidade: 35, categoria: "Eletrônico" },
@@ -137,17 +137,17 @@
             return 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&auto=format&fit=crop&q=60';
         }
 
-        // FUNÇÃO DE BUSCA: LIGA DIRETO COM O SEU CONTROLLER JAVA
+        
        function debounceBusca(valor) {
             termoBusca = valor.trim();
             clearTimeout(timerDebounce);
             
             timerDebounce = setTimeout(async () => {
                 if (termoBusca !== '') {
-                    // SE FOR UM NÚMERO, FAZ A BUSCA COMBINADA (ID + NOME)
+                    
                     if (/^\d+$/.test(termoBusca)) {
                         try {
-                            // Cria as duas requisições paralelas para o seu Java no IntelliJ
+                            
                             const [resId, resNome] = await Promise.all([
                                 fetch(`${API_URL}/${termoBusca}`),
                                 fetch(`${API_URL}/busca?nome=${encodeURIComponent(termoBusca)}`)
@@ -155,13 +155,13 @@
 
                             let produtosEncontrados = [];
 
-                            // 1. Tenta pegar o produto pelo ID (retorna objeto único)
+                            
                             if (resId.ok) {
                                 const prodId = await resId.json();
                                 produtosEncontrados.push(prodId);
                             }
 
-                            // 2. Tenta pegar os produtos pelo Nome (retorna uma lista)
+                            
                             if (resNome.ok) {
                                 const prodsNome = await resNome.json();
                                 produtosEncontrados = [...produtosEncontrados, ...prodsNome];
@@ -176,12 +176,12 @@
                             return;
 
                         } catch (e) {
-                            // Se o Java estiver offline, o filtro local abaixo resolve
+                            
                             aplicarFiltrosETela();
                             return;
                         }
                     } else {
-                        // SE FOR TEXTO (LETRAS): Busca normal apenas por nome no Java
+                        
                         try {
                             const res = await fetch(`${API_URL}/busca?nome=${encodeURIComponent(termoBusca)}`);
                             if (res.ok) {
@@ -196,13 +196,13 @@
             }, 250);
         }
 
-        // FILTRO LOCAL (Garante o funcionamento mesmo se o Java estiver reiniciando)
+        
       function aplicarFiltrosETela() {
             let resultado = [...listaProdutos];
 
             if (termoBusca) {
                 if (/^\d+$/.test(termoBusca)) {
-                    // Traz se o ID for igual OU se o nome do produto contiver o número
+                    
                     resultado = resultado.filter(p => 
                         p.id == termoBusca || 
                         p.nome.toLowerCase().includes(termoBusca.toLowerCase())
